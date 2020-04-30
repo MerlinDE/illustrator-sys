@@ -1,5 +1,8 @@
 extern crate bindgen;
 
+use glob::glob;
+use glob::glob_with;
+use glob::MatchOptions;
 use std::env;
 use std::path::PathBuf;
 
@@ -9,10 +12,42 @@ fn main() {
     // println!("cargo:rustc-link-lib=bz2");
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
-    println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=wrapper.hpp");
 
     let toml_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let sdk_path = toml_path.join("SDK");
+
+    let sdk_header_dirs = ["/samplecode/common/**", "/illustratorapi/**"];
+
+    let options = MatchOptions {
+        case_sensitive: false,
+        require_literal_separator: false,
+        require_literal_leading_dot: false,
+    };
+
+    let mut clang_options = Vec::new();
+
+    for hdir in sdk_header_dirs.iter().as_slice() {
+        for entry in glob_with(
+            &format!(
+                "{}{}",
+                sdk_path.to_str().expect("SDK Path misconfiguration"),
+                hdir
+            )
+            .to_string(),
+            options,
+        )
+        .expect("Failed to read glob pattern")
+        {
+            match entry {
+                Ok(path) => clang_options.push(format!(
+                    "-I{}",
+                    sdk_path.join(PathBuf::from(path)).display()
+                )),
+                Err(e) => println!("{:?}", e),
+            }
+        }
+    }
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -29,46 +64,12 @@ fn main() {
         .opaque_type("std::*")
         .opaque_type("size_type")
         // and args for include file search path
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path.join("samplecode").join("common").join("includes").display()
-        )) // /samplecode/common/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path.join("samplecode").join("common").join("includes").join("legacy").display()
-        )) // /samplecode/common/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path.join("illustratorapi").join("ate").display()
-        )) // /illustratorapi/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path.join("illustratorapi").join("ate").join("legacy").display()
-        )) // /illustratorapi/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path.join("illustratorapi").join("ate").join("SloTextdomTypes").display()
-        )) // /illustratorapi/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path
-                .join("illustratorapi")
-                .join("illustrator")
-                .display()
-        )) // /illustratorapi/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path
-                .join("illustratorapi")
-                .join("illustrator")
-                .join("actions")
-                .display()
-        )) // /illustratorapi/**
-        .clang_arg(format!(
-            "-I{}",
-            sdk_path.join("illustratorapi").join("pica_sp").display()
-        )) // /illustratorapi/**
-       /*.clang_arg(format!(
+        .clang_args(clang_options)
+
+
+        // Precompiled header doesn't seem to work
+        /*
+       .clang_arg(format!(
             "-include-pch {}",
             sdk_path
                 .join("samplecode")
@@ -76,7 +77,9 @@ fn main() {
                 .join("includes")
                 .join("IllustratorSDKDebug.pch")
                 .display()
-        ))*/ // -include-pch ./SDK/samplecode/common/includes/IllustratorSDKDebug.pch
+        )) // -include-pch ./SDK/samplecode/common/includes/IllustratorSDKDebug.pch
+        */
+
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .clang_arg("-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/")

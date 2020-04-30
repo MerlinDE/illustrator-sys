@@ -148,6 +148,7 @@ name = "illustrator-sys"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "glob",
 ]
 
 [[package]]
