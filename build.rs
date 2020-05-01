@@ -1,6 +1,5 @@
 extern crate bindgen;
 
-use glob::glob;
 use glob::glob_with;
 use glob::MatchOptions;
 use std::env;
@@ -58,27 +57,19 @@ fn main() {
         .header("wrapper.hpp")
         .enable_cxx_namespaces()
         .rustified_enum(".*")
-        .blacklist_type("char_type")
+        // .blacklist_type("char_type")
         //.blacklist_type()
-        .clang_arg("-std=c++11")
-        .opaque_type("std::*")
-        .opaque_type("size_type")
+        //.blacklist_function("std::*")
+        .whitelist_type("ai::.*")
+        .whitelist_type("ActionParamType")
+        .whitelist_type("ai::.*")
+        .whitelist_function("ai::.*")
+        //.whitelist_var("AI*")
+        .clang_arg("-std=c++17")
+        .opaque_type("std::.*")
+        //.opaque_type("size_type")
         // and args for include file search path
         .clang_args(clang_options)
-
-
-        // Precompiled header doesn't seem to work
-        /*
-       .clang_arg(format!(
-            "-include-pch {}",
-            sdk_path
-                .join("samplecode")
-                .join("common")
-                .join("includes")
-                .join("IllustratorSDKDebug.pch")
-                .display()
-        )) // -include-pch ./SDK/samplecode/common/includes/IllustratorSDKDebug.pch
-        */
 
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
