@@ -16,6 +16,11 @@ fn main() {
     let toml_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let sdk_path = toml_path.join("SDK");
 
+    if !sdk_path.exists() {
+        eprintln!("Please download & unpack the Illustrator SDK into {}", sdk_path.display());
+        std::process::exit(1);
+    }
+
     let sdk_header_dirs = ["/samplecode/common/**", "/illustratorapi/**"];
 
     let options = MatchOptions {
