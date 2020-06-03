@@ -19,7 +19,10 @@ fn main() {
         .expect("AISDK_ROOT env variable configuration error.");
 
     if !sdk_path.exists() {
-        eprintln!("Please download & unpack the Illustrator SDK into {}", sdk_path.display());
+        eprintln!(
+            "Please download & unpack the Illustrator SDK into {}",
+            sdk_path.display()
+        );
         std::process::exit(1);
     }
 
