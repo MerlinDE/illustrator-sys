@@ -13,8 +13,10 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.hpp");
 
-    let toml_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let sdk_path = toml_path.join("SDK");
+    let sdk_path: PathBuf = env!("AISDK_ROOT")
+        .to_string()
+        .parse()
+        .expect("AISDK_ROOT env variable configuration error.");
 
     if !sdk_path.exists() {
         eprintln!("Please download & unpack the Illustrator SDK into {}", sdk_path.display());
@@ -31,23 +33,15 @@ fn main() {
 
     let mut clang_options = Vec::new();
 
-    for hdir in sdk_header_dirs.iter().as_slice() {
+    for hdir in sdk_header_dirs.iter() {
         for entry in glob_with(
-            &format!(
-                "{}{}",
-                sdk_path.to_str().expect("SDK Path misconfiguration"),
-                hdir
-            )
-            .to_string(),
+            &format!("{}{}", sdk_path.display(), *hdir).to_string(),
             options,
         )
         .expect("Failed to read glob pattern")
         {
             match entry {
-                Ok(path) => clang_options.push(format!(
-                    "-I{}",
-                    sdk_path.join(PathBuf::from(path)).display()
-                )),
+                Ok(path) => clang_options.push(format!("-I{}", sdk_path.join(path).display())),
                 Err(e) => println!("{:?}", e),
             }
         }
@@ -68,7 +62,23 @@ fn main() {
         .whitelist_type("ai::.*")
         .whitelist_type("ActionParamType")
         .whitelist_type("ai::.*")
+        .whitelist_type("AI::.*")
+        .whitelist_type("AS.*")
+        .whitelist_type("AT.*")
+        .whitelist_type("kSP.*")
+        .whitelist_type(".*Err.*")
+        .whitelist_type("ai_sys::.*")
+        .whitelist_type("SP.*Suite.*")
+        .whitelist_type(".*Plugin.*")
+        .whitelist_type("P[A-Z]_InData")
+        .whitelist_type("pr::.*")
+        .whitelist_type("PiPL::.*")
+        .whitelist_function("SP.*Suite.*")
         .whitelist_function("ai::.*")
+        .whitelist_function(".*Plugin.*")
+        .whitelist_function("Fixup.*")
+        .whitelist_function("kSP.*")
+        .whitelist_var("kSP.*")
         //.whitelist_var("AI*")
         .clang_arg("-std=c++17")
         .opaque_type("std::.*")
