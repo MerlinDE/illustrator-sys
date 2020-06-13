@@ -57,3 +57,6 @@
 // SDK common headers
 #include "Suites.hpp"
 #include "Plugin.hpp"
+
+// Extras
+#include "AIFileFormat.h"

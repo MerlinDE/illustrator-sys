@@ -8,5 +8,5 @@ edition = "2018"
 [dependencies]
 
 [build-dependencies]
-bindgen = "0.53.2"
+bindgen = "0.54.0"
 glob = "0.3.0"
