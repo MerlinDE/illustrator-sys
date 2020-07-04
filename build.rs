@@ -27,6 +27,7 @@ fn main() {
     }
 
     let sdk_header_dirs = ["/samplecode/common/**", "/illustratorapi/**"];
+    // let sdk_header_dirs = ["/illustratorapi/**"];
 
     let options = MatchOptions {
         case_sensitive: false,
@@ -62,31 +63,38 @@ fn main() {
         // .blacklist_type("char_type")
         //.blacklist_type()
         //.blacklist_function("std::*")
-        .whitelist_type("ai::.*")
+        .whitelist_type("AI.*")
         .whitelist_type("ActionParamType")
         .whitelist_type("ai::.*")
         .whitelist_type("AI::.*")
         .whitelist_type("AS.*")
         .whitelist_type("AT.*")
         .whitelist_type("kSP.*")
+        .whitelist_type("kAI.*")
         .whitelist_type(".*Err.*")
         .whitelist_type("ai_sys::.*")
+        .whitelist_type("k?AI.*Suite.*")
         .whitelist_type("SP.*Suite.*")
+        .whitelist_type("SP.*Message.*")
+        .whitelist_type("Suites")
         .whitelist_type(".*Plugin.*")
         .whitelist_type("P[A-Z]_InData")
         .whitelist_type("pr::.*")
         .whitelist_type("PiPL::.*")
         .whitelist_function("SP.*Suite.*")
         .whitelist_function("ai::.*")
-        .whitelist_function(".*Plugin.*")
-        .whitelist_function("Fixup.*")
+        // .whitelist_function(".*Plugin.*")
+        // .whitelist_function("Fixup.*")
         .whitelist_function("kSP.*")
+        .whitelist_function("kAI.*")
         .whitelist_var("kSP.*")
+        .whitelist_var("kAI.*")
         //.whitelist_var("AI*")
-        .clang_arg("-std=c++17")
+        .clang_arg("-std=c++14")
         .opaque_type("std::.*")
         //.opaque_type("size_type")
         // and args for include file search path
+        // .emit_builtins()
         .clang_args(clang_options)
 
         // Tell cargo to invalidate the built crate whenever any of the
@@ -96,6 +104,7 @@ fn main() {
         .clang_arg("-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/")
         .clang_arg("-I/Library/Developer/CommandLineTools/usr/include/c++/v1/")
         .clang_arg("-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/")
+        .clang_arg("-F/Applications/Adobe Illustrator 2020/Adobe Illustrator.app/Contents/Frameworks/") // not sure we really need this
         .clang_arg("-v")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         // Finish the builder and generate the bindings.
