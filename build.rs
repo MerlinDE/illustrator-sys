@@ -104,7 +104,6 @@ fn main() {
         .clang_arg("-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/")
         .clang_arg("-I/Library/Developer/CommandLineTools/usr/include/c++/v1/")
         .clang_arg("-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/")
-        .clang_arg("-F/Applications/Adobe Illustrator 2020/Adobe Illustrator.app/Contents/Frameworks/") // not sure we really need this
         .clang_arg("-v")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         // Finish the builder and generate the bindings.
