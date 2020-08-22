@@ -1,5 +1,6 @@
 extern crate bindgen;
 
+use bindgen::RustTarget;
 use glob::glob_with;
 use glob::MatchOptions;
 use std::env;
@@ -36,6 +37,7 @@ fn main() {
     };
 
     let mut clang_options = Vec::new();
+    let mut incl_dirs = Vec::new();
 
     for hdir in sdk_header_dirs.iter() {
         for entry in glob_with(
@@ -45,11 +47,39 @@ fn main() {
         .expect("Failed to read glob pattern")
         {
             match entry {
-                Ok(path) => clang_options.push(format!("-I{}", sdk_path.join(path).display())),
+                Ok(path) => {
+                    let ipath = sdk_path.join(path);
+                    clang_options.push(format!("-I{}", &ipath.display()));
+                    incl_dirs.push(format!("{}", ipath.display()));
+                }
                 Err(e) => println!("{:?}", e),
             }
         }
     }
+
+    // We want to add some C/C++ sources files here as a library to link into the overall project
+    let c_src = [
+        sdk_path
+            .clone()
+            .join("illustratorapi/illustrator/IAIUnicodeString.cpp"),
+        // sdk_path
+        //     .clone()
+        //     .join("illustratorapi/illustrator/IAIUnicodeString.inl"),
+    ];
+    let mut c_builder = cc::Build::new();
+    let c_build = c_builder
+        .cpp(true)
+        .define("MAC_ENV", None)
+        .files(c_src.iter())
+        .flag("-Wno-unused-parameter")
+        .flag("-std=c++14")
+        .flag("--verbose");
+
+    // .define("USE_ZLIB", None);
+    for include_dir in incl_dirs {
+        c_build.include(include_dir);
+    }
+    c_build.compile("adobe_wrappers");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -92,6 +122,8 @@ fn main() {
         //.whitelist_var("AI*")
         .clang_arg("-std=c++14")
         .opaque_type("std::.*")
+        // .opaque_type("ai::UnicodeString")
+        // .blacklist_item("ai::UnicodeString")
         //.opaque_type("size_type")
         // and args for include file search path
         // .emit_builtins()
@@ -105,6 +137,7 @@ fn main() {
         .clang_arg("-I/Library/Developer/CommandLineTools/usr/include/c++/v1/")
         .clang_arg("-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/")
         .clang_arg("-v")
+        .rust_target(RustTarget::Nightly)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         // Finish the builder and generate the bindings.
         .generate()

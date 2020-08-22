@@ -60,3 +60,6 @@
 
 // Extras
 #include "AIFileFormat.h"
+
+#include "subst.h"
+
