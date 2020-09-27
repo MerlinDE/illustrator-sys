@@ -61,5 +61,8 @@
 // Extras
 #include "AIFileFormat.h"
 
+// substituted classes
 #include "subst.h"
 
+// basic C wrapper classes
+#include "src/wrapper.hpp"

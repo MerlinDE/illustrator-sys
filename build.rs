@@ -13,6 +13,8 @@ fn main() {
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.hpp");
+    println!("cargo:rerun-if-changed=src/wrapper.hpp");
+    println!("cargo:rerun-if-changed=src/wrapper.cpp");
 
     let sdk_path: PathBuf = env!("AISDK_ROOT")
         .to_string()
@@ -57,29 +59,53 @@ fn main() {
         }
     }
 
+    let clang_args = [
+        "-std=c++14",
+        // "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/",
+        // "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Headers/",
+        "-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/",
+        // "-I/Library/Developer/CommandLineTools/usr/include/c++/v1/",
+        "-F/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/",
+    ];
+
+    let project_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
     // We want to add some C/C++ sources files here as a library to link into the overall project
     let c_src = [
         sdk_path
             .clone()
             .join("illustratorapi/illustrator/IAIUnicodeString.cpp"),
+        project_root.clone().join("src/wrapper.cpp"),
         // sdk_path
         //     .clone()
         //     .join("illustratorapi/illustrator/IAIUnicodeString.inl"),
     ];
+
+    // enable sccache for c compilation
+    // if std::process::Command::new("sccache").arg("--version").status().is_ok() {
+    //     std::env::set_var("CC", "sccache cc");
+    //     std::env::set_var("CXX", "sccache c++");
+    // }
+
+    println!("Building adobe_wrappers.");
     let mut c_builder = cc::Build::new();
     let c_build = c_builder
         .cpp(true)
         .define("MAC_ENV", None)
         .files(c_src.iter())
-        .flag("-Wno-unused-parameter")
-        .flag("-std=c++14")
+        // .compiler("clang")
+        // .flag("-Wno-unused-parameter")
+        // .flag("-std=c++14")
         .flag("--verbose");
 
-    // .define("USE_ZLIB", None);
     for include_dir in incl_dirs {
         c_build.include(include_dir);
     }
+    for clang_arg in clang_args.iter() {
+        c_build.flag(clang_arg);
+    }
     c_build.compile("adobe_wrappers");
+    println!("adobe_wrappers done.");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -113,6 +139,7 @@ fn main() {
         .whitelist_type("PiPL::.*")
         .whitelist_function("SP.*Suite.*")
         .whitelist_function("ai::.*")
+        .whitelist_function("unicode_string_from_utf8")
         // .whitelist_function(".*Plugin.*")
         // .whitelist_function("Fixup.*")
         .whitelist_function("kSP.*")
@@ -122,20 +149,21 @@ fn main() {
         //.whitelist_var("AI*")
         .clang_arg("-std=c++14")
         .opaque_type("std::.*")
-        // .opaque_type("ai::UnicodeString")
+        .opaque_type("ai::UnicodeString")
         // .blacklist_item("ai::UnicodeString")
         //.opaque_type("size_type")
         // and args for include file search path
         // .emit_builtins()
         .clang_args(clang_options)
-
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
-        .clang_arg("-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/")
-        .clang_arg("-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Headers/")
+        // .clang_arg("-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/")
+        // .clang_arg("-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Headers/")
         .clang_arg("-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/")
-        .clang_arg("-I/Library/Developer/CommandLineTools/usr/include/c++/v1/")
-        .clang_arg("-F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/")
+        // .clang_arg("-I/Library/Developer/CommandLineTools/usr/include/c++/v1/")
+        .clang_arg(
+            "-F/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/",
+        )
         .clang_arg("-v")
         .rust_target(RustTarget::Nightly)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
