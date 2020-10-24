@@ -51,6 +51,8 @@
 #include "AIUndo.h"
 #include "AIUser.h"
 
+#include "AIPanel.h"
+
 // ATE text API
 // #include "IText.h"
 
@@ -60,9 +62,13 @@
 
 // Extras
 #include "AIFileFormat.h"
+#include "AIControlBar.h"
 
 // substituted classes
 #include "subst.h"
 
 // basic C wrapper classes
 #include "src/wrapper.hpp"
+
+// some stuff from Apple's foundation
+//#include <Foundation/NSBundle.h>
