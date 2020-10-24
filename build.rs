@@ -1,64 +1,36 @@
 extern crate bindgen;
 
 use bindgen::RustTarget;
-use glob::glob_with;
-use glob::MatchOptions;
 use std::env;
 use std::path::PathBuf;
 
-fn main() {
-    // Tell cargo to tell rustc to link the system bzip2
-    // shared library.
-    // println!("cargo:rustc-link-lib=bz2");
+use build_helper::*;
 
+fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.hpp");
     println!("cargo:rerun-if-changed=src/wrapper.hpp");
     println!("cargo:rerun-if-changed=src/wrapper.cpp");
 
-    let sdk_path: PathBuf = env!("AISDK_ROOT")
-        .to_string()
-        .parse()
-        .expect("AISDK_ROOT env variable configuration error.");
-
-    if !sdk_path.exists() {
-        eprintln!(
-            "Please download & unpack the Illustrator SDK into {}",
-            sdk_path.display()
-        );
-        std::process::exit(1);
-    }
-
+    let sdk_path = get_ai_sdk_path(env!("AISDK_ROOT"));
     let sdk_header_dirs = ["/samplecode/common/**", "/illustratorapi/**"];
     // let sdk_header_dirs = ["/illustratorapi/**"];
 
-    let options = MatchOptions {
-        case_sensitive: false,
-        require_literal_separator: false,
-        require_literal_leading_dot: false,
-    };
+    // get SDK include dirs as CLANG options (prefixed with -I)
+    let clang_options = get_ai_include_dirs(
+        sdk_header_dirs.iter(),
+        sdk_path.to_str().unwrap(),
+        IncludeDirFormat::CLANG,
+    );
 
-    let mut clang_options = Vec::new();
-    let mut incl_dirs = Vec::new();
+    // get SDK include dirs as plain dirs
+    let incl_dirs = get_ai_include_dirs(
+        sdk_header_dirs.iter(),
+        sdk_path.to_str().unwrap(),
+        IncludeDirFormat::PLAIN,
+    );
 
-    for hdir in sdk_header_dirs.iter() {
-        for entry in glob_with(
-            &format!("{}{}", sdk_path.display(), *hdir).to_string(),
-            options,
-        )
-        .expect("Failed to read glob pattern")
-        {
-            match entry {
-                Ok(path) => {
-                    let ipath = sdk_path.join(path);
-                    clang_options.push(format!("-I{}", &ipath.display()));
-                    incl_dirs.push(format!("{}", ipath.display()));
-                }
-                Err(e) => println!("{:?}", e),
-            }
-        }
-    }
-
+    // define options for CLANG
     let clang_args = [
         "-std=c++14",
         // "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreFoundation.framework/Versions/A/Headers/",
@@ -76,9 +48,6 @@ fn main() {
             .clone()
             .join("illustratorapi/illustrator/IAIUnicodeString.cpp"),
         project_root.clone().join("src/wrapper.cpp"),
-        // sdk_path
-        //     .clone()
-        //     .join("illustratorapi/illustrator/IAIUnicodeString.inl"),
     ];
 
     // enable sccache for c compilation
@@ -87,7 +56,7 @@ fn main() {
     //     std::env::set_var("CXX", "sccache c++");
     // }
 
-    println!("Building adobe_wrappers.");
+    eprintln!("Building adobe_wrappers.");
     let mut c_builder = cc::Build::new();
     let c_build = c_builder
         .cpp(true)
