@@ -4,7 +4,7 @@ use bindgen::RustTarget;
 use std::env;
 use std::path::PathBuf;
 
-use build_helper::*;
+use toolbelt::*;
 
 fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
@@ -12,19 +12,19 @@ fn main() {
     println!("cargo:rerun-if-changed=src/wrapper.hpp");
     println!("cargo:rerun-if-changed=src/wrapper.cpp");
 
-    let sdk_path = get_ai_sdk_path(env!("AISDK_ROOT"));
+    let sdk_path = get_sdk_path(env!("AISDK_ROOT"));
     let sdk_header_dirs = ["/samplecode/common/**", "/illustratorapi/**"];
     // let sdk_header_dirs = ["/illustratorapi/**"];
 
     // get SDK include dirs as CLANG options (prefixed with -I)
-    let clang_options = get_ai_include_dirs(
+    let clang_options = get_sdk_include_dirs(
         sdk_header_dirs.iter(),
         sdk_path.to_str().unwrap(),
         IncludeDirFormat::CLANG,
     );
 
     // get SDK include dirs as plain dirs
-    let incl_dirs = get_ai_include_dirs(
+    let incl_dirs = get_sdk_include_dirs(
         sdk_header_dirs.iter(),
         sdk_path.to_str().unwrap(),
         IncludeDirFormat::PLAIN,
@@ -51,10 +51,14 @@ fn main() {
     ];
 
     // enable sccache for c compilation
-    // if std::process::Command::new("sccache").arg("--version").status().is_ok() {
-    //     std::env::set_var("CC", "sccache cc");
-    //     std::env::set_var("CXX", "sccache c++");
-    // }
+    if std::process::Command::new("sccache")
+        .arg("--version")
+        .status()
+        .is_ok()
+    {
+        std::env::set_var("CC", "sccache cc");
+        std::env::set_var("CXX", "sccache c++");
+    }
 
     eprintln!("Building adobe_wrappers.");
     let mut c_builder = cc::Build::new();
