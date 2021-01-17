@@ -9,9 +9,10 @@ edition = "2018"
 libc = "0.2"
 
 [build-dependencies]
-bindgen = "^0.56"
+# bindgen = "^0.56"
+bindgen = "*"
 glob = "0.3"
-widestring = "0.4"
+#widestring = "0.4"
 cc = { version = "1.0", features = ["parallel"] }
-toolbelt = { path = "../toolbelt" }
+toolbelt = { path = "../toolbelt", git = "https://github.com/MerlinDE/toolbelt" }
 
