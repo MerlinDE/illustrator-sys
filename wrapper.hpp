@@ -24,6 +24,7 @@
 // sweet pea headers
 #include "SPTypes.h"
 #include "SPBlocks.h"
+#include "SPRuntme.h" // yes, the filename has no 'i'
 
 // illustrator headers
 #include "AITypes.h"
