@@ -89,6 +89,7 @@ fn main() {
         .header("wrapper.hpp")
         .enable_cxx_namespaces()
         .rustified_enum(".*")
+        // .derive_default(true) // FIXME: This results in default derives attached to enums, which isn't possible
         // .blacklist_type("char_type")
         //.blacklist_type()
         //.blacklist_function("std::*")
