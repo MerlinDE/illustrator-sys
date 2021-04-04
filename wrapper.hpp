@@ -65,6 +65,8 @@
 #include "AIFileFormat.h"
 #include "AIControlBar.h"
 #include "AIShapeConstruction.h"
+#include "AIGeometry.h"
+#include "AITransformArt.h"
 
 // substituted classes
 #include "subst.h"
