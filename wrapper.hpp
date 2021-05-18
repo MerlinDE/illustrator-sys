@@ -68,6 +68,7 @@
 #include "AIGeometry.h"
 #include "AITransformArt.h"
 #include "AIUID.h"
+#include "AIArtboard.h"
 
 // substituted classes
 #include "subst.h"
