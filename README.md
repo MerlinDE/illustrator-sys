@@ -20,7 +20,10 @@ IllustratorSDK
     ├── ...
 ├── tools
 ```
+### Make it available in your IDE
 
+On macOS you can add the `export` to `~/.profile` and `~/.zprofile` to also make the environment variable available
+inside your IDE.
 
 ## Getting help
 
