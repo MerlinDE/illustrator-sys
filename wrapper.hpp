@@ -70,6 +70,7 @@
 #include "AIUID.h"
 #include "AIArtboard.h"
 #include "AIUUID.h"
+#include "AILimits.h"
 
 // substituted classes
 #include "subst.h"
