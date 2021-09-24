@@ -1,8 +1,9 @@
 extern crate bindgen;
 
-use bindgen::RustTarget;
 use std::env;
 use std::path::PathBuf;
+
+use bindgen::RustTarget;
 
 use toolbelt::*;
 
@@ -77,7 +78,8 @@ fn main() {
     for clang_arg in clang_args.iter() {
         c_build.flag(clang_arg);
     }
-    c_build.compile("adobe_wrappers");
+    // TODO: We currently don't have any wrappers to compile in, so we just skip this step for now
+    // c_build.compile("adobe_wrappers");
     println!("adobe_wrappers done.");
 
     // The bindgen::Builder is the main entry point
@@ -89,6 +91,9 @@ fn main() {
         .header("wrapper.hpp")
         .enable_cxx_namespaces()
         .rustified_enum(".*")
+        .derive_debug(true)
+        .size_t_is_usize(true)
+        .translate_enum_integer_types(true)
         // .derive_default(true) // FIXME: This results in default derives attached to enums, which isn't possible
         // .blocklist_type("char_type")
         //.blocklist_type()
@@ -139,7 +144,7 @@ fn main() {
             "-F/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/",
         )
         .clang_arg("-v")
-        .rust_target(RustTarget::Nightly)
+        .rust_target(RustTarget::default())
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         // Finish the builder and generate the bindings.
         .generate()

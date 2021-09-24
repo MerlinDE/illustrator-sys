@@ -1,6 +1,7 @@
-use crate::root as ai_sys;
 use std::convert::{From, TryFrom};
 use std::ffi::CString;
+
+use crate::root as ai_sys;
 
 #[no_mangle]
 impl From<ai_sys::ai::UnicodeString> for String {
@@ -91,6 +92,7 @@ impl TryFrom<i16> for ai_sys::AIArtType {
 
 // TODO: rewrite into general conversion macro
 // taken from https://stackoverflow.com/questions/28028854/how-do-i-match-enum-values-with-an-integer
+#[allow(unused_macros)]
 macro_rules! back_to_enum {
     ($(#[$meta:meta])* $vis:vis enum $name:ident {
         $($(#[$vmeta:meta])* $vname:ident $(= $val:expr)?,)*
