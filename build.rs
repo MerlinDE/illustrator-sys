@@ -45,10 +45,8 @@ fn main() {
 
     // We want to add some C/C++ sources files here as a library to link into the overall project
     let c_src = [
-        sdk_path
-            .clone()
-            .join("illustratorapi/illustrator/IAIUnicodeString.cpp"),
-        project_root.clone().join("src/wrapper.cpp"),
+        sdk_path.join("illustratorapi/illustrator/IAIUnicodeString.cpp"),
+        project_root.join("src/wrapper.cpp"),
     ];
 
     // enable sccache for c compilation
